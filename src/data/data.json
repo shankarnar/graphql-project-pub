@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "posts": ["1", "2"]
+    }
+  ],
+  "posts": [
+    {
+      "id": "1",
+      "title": "Sample Post",
+      "content": "Content here",
+      "authorId": "1"
+    }
+  ]
+}
