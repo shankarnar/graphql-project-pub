@@ -76,8 +76,8 @@ query {
 # Create a new user
 mutation {
   createUser(input: {
-    name: "Alice Johnson"
-    email: "alice@example.com"
+    name: "Anand J"
+    email: "anandj@example.com"
   }) {
     id
     name
