@@ -1,6 +1,7 @@
-const express = require('express');
 const { createYoga } = require('graphql-yoga');
 const { createServer } = require('http');
+const express = require('express');
+const path = require('path');
 require('dotenv').config();
 
 // Import schema and resolvers
@@ -9,7 +10,7 @@ const resolvers = require('./resolvers');
 
 // Import utilities
 const logger = require('./utils/logger');
-const { validateEnvironment } = require('./utils/validation');
+const { validateEnvironment } = require('./utils/validators');
 
 // Validate environment variables
 validateEnvironment();
@@ -17,15 +18,9 @@ validateEnvironment();
 // Create Express app
 const app = express();
 
-// Middleware for request logging
+// Middleware for logging requests
 app.use((req, res, next) => {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    logger.info(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
-  });
-  
+  logger.info(`${req.method} ${req.url} - ${req.ip}`);
   next();
 });
 
@@ -39,88 +34,99 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'GraphQL API Server',
+    version: process.env.npm_package_version || '1.0.0',
+    graphql: '/graphql',
+    health: '/health',
+    environment: process.env.NODE_ENV
+  });
+});
+
 // Create GraphQL Yoga server
 const yoga = createYoga({
-  schema: {
-    typeDefs,
-    resolvers
-  },
-  context: ({ request }) => {
+  typeDefs,
+  resolvers,
+  context: async ({ request }) => {
+    // Add request context
     return {
       request,
-      // Add any context data here
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      userAgent: request.headers.get('user-agent') || 'unknown'
     };
   },
-  cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? process.env.ALLOWED_ORIGINS?.split(',') || false
-      : true,
-    credentials: true
-  },
-  graphiql: process.env.NODE_ENV === 'development',
+  // Error handling
   maskedErrors: process.env.NODE_ENV === 'production',
-  logging: {
-    debug: (...args) => logger.debug(...args),
-    info: (...args) => logger.info(...args),
-    warn: (...args) => logger.warn(...args),
-    error: (...args) => logger.error(...args)
-  }
-});
-
-// Use GraphQL Yoga as middleware
-app.use('/graphql', yoga);
-
-// Root endpoint redirect
-app.get('/', (req, res) => {
-  if (process.env.NODE_ENV === 'development') {
-    res.redirect('/graphql');
-  } else {
-    res.json({
-      message: 'GraphQL API Server',
-      version: process.env.npm_package_version || '1.0.0',
-      endpoints: {
-        graphql: '/graphql',
-        health: '/health'
-      }
+  // CORS configuration - simplified
+  cors: {
+    origin: '*',
+    credentials: false
+  },
+  // GraphQL Playground (only in development)
+  graphiql: process.env.NODE_ENV !== 'production',
+  // Custom error formatter
+  formatError: (error) => {
+    logger.error('GraphQL Error:', {
+      message: error.message,
+      locations: error.locations,
+      path: error.path,
+      stack: error.stack
     });
+    
+    // Return sanitized error in production
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        message: error.message,
+        locations: error.locations,
+        path: error.path
+      };
+    }
+    
+    return error;
   }
 });
+
+// Mount GraphQL endpoint
+app.use('/graphql', yoga);
 
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Not Found',
-    message: `Route ${req.originalUrl} not found`,
-    availableEndpoints: ['/graphql', '/health']
+    message: 'The requested resource was not found',
+    availableEndpoints: {
+      graphql: '/graphql',
+      health: '/health',
+      root: '/'
+    }
   });
 });
 
 // Global error handler
 app.use((error, req, res, next) => {
-  logger.error('Unhandled error:', error);
+  logger.error('Unhandled Error:', {
+    message: error.message,
+    stack: error.stack,
+    url: req.url,
+    method: req.method
+  });
   
-  // Don't expose error details in production
-  if (process.env.NODE_ENV === 'production') {
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Something went wrong'
-    });
-  } else {
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: error.message,
-      stack: error.stack
-    });
-  }
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'production' 
+      ? 'Something went wrong' 
+      : error.message
+  });
 });
+
+// Get port from environment or default to 4000
+const PORT = process.env.PORT || 4000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Create HTTP server
 const server = createServer(app);
-
-// Server configuration
-const PORT = process.env.PORT || 4000;
-const HOST = process.env.HOST || 'localhost';
 
 // Graceful shutdown handling
 const gracefulShutdown = (signal) => {
@@ -136,9 +142,9 @@ const gracefulShutdown = (signal) => {
     process.exit(0);
   });
   
-  // Force shutdown after timeout
+  // Force close after 10 seconds
   setTimeout(() => {
-    logger.error('Forced shutdown due to timeout');
+    logger.error('Could not close connections in time, forcefully shutting down');
     process.exit(1);
   }, 10000);
 };
@@ -160,36 +166,17 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start server
-const startServer = async () => {
-  try {
-    await new Promise((resolve, reject) => {
-      server.listen(PORT, HOST, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    logger.info(`🚀 Server running at http://${HOST}:${PORT}`);
-    logger.info(`📊 GraphQL endpoint: http://${HOST}:${PORT}/graphql`);
-    logger.info(`🔍 Health check: http://${HOST}:${PORT}/health`);
-    
-    if (process.env.NODE_ENV === 'development') {
-      logger.info(`🎮 GraphQL Playground: http://${HOST}:${PORT}/graphql`);
-    }
-    
-    logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
-    
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
+server.listen(PORT, () => {
+  logger.info(`🚀 Server is running on http://localhost:${PORT}`);
+  logger.info(`🔍 GraphQL endpoint available at http://localhost:${PORT}/graphql`);
+  logger.info(`❤️  Health check available at http://localhost:${PORT}/health`);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    logger.info(`🎮 GraphQL Playground available at http://localhost:${PORT}/graphql`);
   }
-};
+  
+  logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
+});
 
-// Start the server
-startServer();
-
-// Export for testing
+// Export server for testing
 module.exports = { app, server };
