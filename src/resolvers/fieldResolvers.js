@@ -2,31 +2,24 @@ const { GraphQLError } = require('graphql');
 const { findUserById, findPostsByAuthorId } = require('../utils/dataManager');
 const logger = require('../utils/logger');
 
-/**
- * Field resolvers for complex field resolution in GraphQL
- */
 const fieldResolvers = {
-  /**
-   * User field resolvers
-   */
+
   User: {
-    /**
-     * Resolve posts for a user
-     */
+
     posts: async (parent, args, context) => {
       try {
         logger.debug('Resolving posts for user', { userId: parent.id, userName: parent.name });
         
-        // If posts are already populated (e.g., from eager loading), return them
+
         if (parent.posts && Array.isArray(parent.posts) && parent.posts.length > 0) {
-          // Check if the first element is already a post object or just an ID
+
           if (typeof parent.posts[0] === 'object' && parent.posts[0].title) {
             logger.debug('Posts already populated for user', { userId: parent.id, count: parent.posts.length });
             return parent.posts;
           }
         }
         
-        // Fetch posts by author ID
+
         const posts = await findPostsByAuthorId(parent.id);
         
         logger.debug('Posts resolved for user', { 
@@ -53,18 +46,13 @@ const fieldResolvers = {
     }
   },
 
-  /**
-   * Post field resolvers
-   */
+
   Post: {
-    /**
-     * Resolve author for a post
-     */
+
     author: async (parent, args, context) => {
       try {
         logger.debug('Resolving author for post', { postId: parent.id, postTitle: parent.title, authorId: parent.authorId });
         
-        // If author is already populated, return it
         if (parent.author && typeof parent.author === 'object' && parent.author.name) {
           logger.debug('Author already populated for post', { 
             postId: parent.id, 
@@ -74,7 +62,6 @@ const fieldResolvers = {
           return parent.author;
         }
         
-        // Fetch author by ID
         const author = await findUserById(parent.authorId);
         
         if (!author) {
@@ -124,13 +111,8 @@ const fieldResolvers = {
     }
   },
 
-  /**
-   * DateTime scalar resolver
-   */
   DateTime: {
-    /**
-     * Serialize DateTime to ISO string
-     */
+
     serialize: (value) => {
       if (value instanceof Date) {
         return value.toISOString();
@@ -141,9 +123,6 @@ const fieldResolvers = {
       throw new GraphQLError('Value must be a Date object or ISO string');
     },
 
-    /**
-     * Parse value from input
-     */
     parseValue: (value) => {
       if (typeof value === 'string') {
         const date = new Date(value);
@@ -155,9 +134,6 @@ const fieldResolvers = {
       throw new GraphQLError('Value must be a string');
     },
 
-    /**
-     * Parse literal from AST
-     */
     parseLiteral: (ast) => {
       if (ast.kind === 'StringValue') {
         const date = new Date(ast.value);

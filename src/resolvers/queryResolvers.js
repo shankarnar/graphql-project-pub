@@ -14,13 +14,9 @@ const {
 const { validateGraphQLInput } = require('../utils/validators');
 const logger = require('../utils/logger');
 
-/**
- * Query resolvers for GraphQL operations
- */
+
 const queryResolvers = {
-  /**
-   * Get all users
-   */
+
   users: async (parent, args, context) => {
     try {
       logger.info('Fetching all users');
@@ -38,14 +34,12 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Get user by ID
-   */
+
   user: async (parent, { id }, context) => {
     try {
       logger.info('Fetching user by ID', { userId: id });
       
-      // Validate ID
+
       const idValidationErrors = validateGraphQLInput.validateId(id);
       if (idValidationErrors.length > 0) {
         throw new GraphQLError(idValidationErrors[0], {
@@ -84,9 +78,6 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Search users
-   */
   searchUsers: async (parent, { input }, context) => {
     try {
       logger.info('Searching users', { searchTerm: input.term });
@@ -101,7 +92,6 @@ const queryResolvers = {
       
       const users = await searchUsers(input.term.trim());
       
-      // Apply pagination if provided
       let result = users;
       if (input.offset !== undefined || input.limit !== undefined) {
         const offset = input.offset || 0;
@@ -131,9 +121,6 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Get all posts
-   */
   posts: async (parent, args, context) => {
     try {
       logger.info('Fetching all posts');
@@ -151,14 +138,10 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Get post by ID
-   */
   post: async (parent, { id }, context) => {
     try {
       logger.info('Fetching post by ID', { postId: id });
       
-      // Validate ID
       const idValidationErrors = validateGraphQLInput.validateId(id);
       if (idValidationErrors.length > 0) {
         throw new GraphQLError(idValidationErrors[0], {
@@ -197,9 +180,6 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Get published posts
-   */
   publishedPosts: async (parent, args, context) => {
     try {
       logger.info('Fetching published posts');
@@ -217,14 +197,10 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Get posts by author ID
-   */
   postsByAuthor: async (parent, { authorId }, context) => {
     try {
       logger.info('Fetching posts by author', { authorId });
       
-      // Validate ID
       const idValidationErrors = validateGraphQLInput.validateId(authorId);
       if (idValidationErrors.length > 0) {
         throw new GraphQLError(idValidationErrors[0], {
@@ -235,7 +211,6 @@ const queryResolvers = {
         });
       }
       
-      // Check if author exists
       const author = await findUserById(authorId);
       if (!author) {
         throw new GraphQLError('Author not found', {
@@ -269,99 +244,7 @@ const queryResolvers = {
     }
   },
 
-  /**
-   * Search posts
-   */
-  searchPosts: async (parent, { input }, context) => {
-    try {
-      logger.info('Searching posts', { searchTerm: input.term });
-      
-      if (!input.term || input.term.trim().length === 0) {
-        throw new GraphQLError('Search term is required', {
-          extensions: {
-            code: 'INVALID_SEARCH_TERM'
-          }
-        });
-      }
-      
-      const posts = await searchPosts(input.term.trim());
-      
-      // Apply pagination if provided
-      let result = posts;
-      if (input.offset !== undefined || input.limit !== undefined) {
-        const offset = input.offset || 0;
-        const limit = input.limit || 10;
-        result = posts.slice(offset, offset + limit);
-      }
-      
-      logger.info('Post search completed', { 
-        searchTerm: input.term, 
-        totalResults: posts.length,
-        returnedResults: result.length 
-      });
-      
-      return result;
-    } catch (error) {
-      if (error instanceof GraphQLError) {
-        throw error;
-      }
-      
-      logger.logError('Error searching posts', error, { input });
-      throw new GraphQLError('Failed to search posts', {
-        extensions: {
-          code: 'SEARCH_POSTS_ERROR',
-          originalError: error.message
-        }
-      });
-    }
-  },
 
-  /**
-   * Get database statistics
-   */
-  stats: async (parent, args, context) => {
-    try {
-      logger.info('Fetching database statistics');
-      const stats = await getStats();
-      logger.info('Database statistics fetched successfully', stats);
-      return stats;
-    } catch (error) {
-      logger.logError('Error fetching database statistics', error);
-      throw new GraphQLError('Failed to fetch database statistics', {
-        extensions: {
-          code: 'FETCH_STATS_ERROR',
-          originalError: error.message
-        }
-      });
-    }
-  },
-
-  /**
-   * Validate data integrity
-   */
-  validateIntegrity: async (parent, args, context) => {
-    try {
-      logger.info('Validating data integrity');
-      const integrityReport = await validateDataIntegrity();
-      logger.info('Data integrity validation completed', { 
-        isValid: integrityReport.isValid,
-        issueCount: integrityReport.issues.length 
-      });
-      return integrityReport;
-    } catch (error) {
-      logger.logError('Error validating data integrity', error);
-      throw new GraphQLError('Failed to validate data integrity', {
-        extensions: {
-          code: 'VALIDATE_INTEGRITY_ERROR',
-          originalError: error.message
-        }
-      });
-    }
-  },
-
-  /**
-   * Health check
-   */
   health: async (parent, args, context) => {
     try {
       const timestamp = new Date().toISOString();

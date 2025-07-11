@@ -2,56 +2,85 @@
   "users": [
     {
       "id": "1",
-      "name": "John Doe",
-      "email": "john.doe@example.com",
-      "posts": ["1", "2"],
-      "createdAt": "2025-01-01T10:00:00.000Z",
-      "updatedAt": "2025-01-01T10:00:00.000Z"
+      "name": "Ajay bose",
+      "email": "ajaya.bose@example.com",
+      "posts": [
+        "1",
+        "2"
+      ],
+      "createdAt": "2025-07-01T10:00:00.000Z",
+      "updatedAt": "2025-07-01T10:00:00.000Z"
     },
     {
       "id": "2",
-      "name": "Jane Smith",
-      "email": "jane.smith@example.com",
-      "posts": ["3"],
-      "createdAt": "2025-01-02T10:00:00.000Z",
-      "updatedAt": "2025-01-02T10:00:00.000Z"
+      "name": "Balaji",
+      "email": "balaji.s@example.com",
+      "posts": [
+        "3"
+      ],
+      "createdAt": "2025-07-02",
+      "updatedAt": "2025-07-02"
     },
     {
       "id": "3",
-      "name": "Mike Johnson",
-      "email": "mike.johnson@example.com",
+      "name": "Mike Jackson",
+      "email": "mike.jackson@example.com",
       "posts": [],
-      "createdAt": "2025-01-03T10:00:00.000Z",
-      "updatedAt": "2025-01-03T10:00:00.000Z"
+      "createdAt": "2025-07-03",
+      "updatedAt": "2025-07-03"
+    },
+    {
+      "id": "4",
+      "name": "Alice hussain",
+      "email": "alice.hussain@example.com",
+      "posts": [],
+      "createdAt": "2025-07-11",
+      "updatedAt": "2025-07-11"
+    },
+    {
+      "id": "5",
+      "name": "Test User",
+      "email": "test.user@example.com",
+      "posts": [],
+      "createdAt": "2025-07-11",
+      "updatedAt": "2025-07-11"
+    },
+    {
+      "id": "mcyp76qsrlwath13tur",
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "posts": [],
+      "createdAt": "2025-07-11T10:52:53.860Z",
+      "updatedAt": "2025-07-11T10:52:53.860Z"
     }
   ],
   "posts": [
     {
       "id": "1",
-      "title": "Getting Started with GraphQL",
-      "content": "GraphQL is a powerful query language for APIs that provides a complete and understandable description of the data in your API. It gives clients the power to ask for exactly what they need and nothing more, makes it easier to evolve APIs over time, and enables powerful developer tools.",
+      "title": "AWS EC2",
+      "content": "Preconfigured templates for your instances that package the components you need for your server.",
       "published": true,
       "authorId": "1",
-      "createdAt": "2025-01-01T11:00:00.000Z",
-      "updatedAt": "2025-01-01T11:00:00.000Z"
+      "createdAt": "2025-07-01",
+      "updatedAt": "2025-07-01"
     },
     {
       "id": "2",
-      "title": "Building APIs with Node.js",
-      "content": "Node.js is an excellent choice for building APIs due to its non-blocking I/O model and extensive package ecosystem. When combined with Express.js and GraphQL, you can create powerful and efficient APIs that scale well.",
+      "title": "AWS EBS",
+      "content": "Persistent storage volumes for your data using Amazon Elastic Block Store",
       "published": true,
       "authorId": "1",
-      "createdAt": "2025-01-01T12:00:00.000Z",
-      "updatedAt": "2025-01-01T12:00:00.000Z"
+      "createdAt": "2025-01-01",
+      "updatedAt": "2025-01-01"
     },
     {
       "id": "3",
-      "title": "Draft: Advanced GraphQL Patterns",
-      "content": "This post will cover advanced GraphQL patterns including federation, subscriptions, and schema stitching. These concepts are essential for building enterprise-scale GraphQL applications.",
+      "title": "Instance Store",
+      "content": "Storage volumes for temporary data that is deleted when you stop, hibernate, or terminate your instance.",
       "published": false,
       "authorId": "2",
-      "createdAt": "2025-01-02T11:00:00.000Z",
-      "updatedAt": "2025-01-02T11:00:00.000Z"
+      "createdAt": "2025-07-02",
+      "updatedAt": "2025-07-02"
     }
   ]
 }
