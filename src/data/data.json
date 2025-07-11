@@ -3,16 +3,55 @@
     {
       "id": "1",
       "name": "John Doe",
-      "email": "john@example.com",
-      "posts": ["1", "2"]
+      "email": "john.doe@example.com",
+      "posts": ["1", "2"],
+      "createdAt": "2025-01-01T10:00:00.000Z",
+      "updatedAt": "2025-01-01T10:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "posts": ["3"],
+      "createdAt": "2025-01-02T10:00:00.000Z",
+      "updatedAt": "2025-01-02T10:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "name": "Mike Johnson",
+      "email": "mike.johnson@example.com",
+      "posts": [],
+      "createdAt": "2025-01-03T10:00:00.000Z",
+      "updatedAt": "2025-01-03T10:00:00.000Z"
     }
   ],
   "posts": [
     {
       "id": "1",
-      "title": "Sample Post",
-      "content": "Content here",
-      "authorId": "1"
+      "title": "Getting Started with GraphQL",
+      "content": "GraphQL is a powerful query language for APIs that provides a complete and understandable description of the data in your API. It gives clients the power to ask for exactly what they need and nothing more, makes it easier to evolve APIs over time, and enables powerful developer tools.",
+      "published": true,
+      "authorId": "1",
+      "createdAt": "2025-01-01T11:00:00.000Z",
+      "updatedAt": "2025-01-01T11:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "title": "Building APIs with Node.js",
+      "content": "Node.js is an excellent choice for building APIs due to its non-blocking I/O model and extensive package ecosystem. When combined with Express.js and GraphQL, you can create powerful and efficient APIs that scale well.",
+      "published": true,
+      "authorId": "1",
+      "createdAt": "2025-01-01T12:00:00.000Z",
+      "updatedAt": "2025-01-01T12:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "title": "Draft: Advanced GraphQL Patterns",
+      "content": "This post will cover advanced GraphQL patterns including federation, subscriptions, and schema stitching. These concepts are essential for building enterprise-scale GraphQL applications.",
+      "published": false,
+      "authorId": "2",
+      "createdAt": "2025-01-02T11:00:00.000Z",
+      "updatedAt": "2025-01-02T11:00:00.000Z"
     }
   ]
 }
