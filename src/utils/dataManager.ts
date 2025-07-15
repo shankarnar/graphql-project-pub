@@ -1,45 +1,37 @@
-const fs = require('fs').promises;
-const path = require('path');
-const { validateJSONStructure } = require('./validators');
-const logger = require('./logger');
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import type { DataStore, User, Post, Stats, IntegrityReport, CleanupResult } from '../types';
+import { validateJSONStructure } from './validators';
+import logger from './logger';
 
-// Get data file path from environment
 const DATA_FILE_PATH = path.resolve(process.env.DATA_FILE_PATH || './src/data/data.json');
 
-/**
- * Read data from JSON file
- */
-const readData = async () => {
+export const readData = async (): Promise<DataStore> => {
   try {
     const startTime = Date.now();
     
-    // Check if file exists
     await fs.access(DATA_FILE_PATH);
     
-    // Read file content
     const fileContent = await fs.readFile(DATA_FILE_PATH, 'utf8');
     
-    // Parse JSON
     const data = JSON.parse(fileContent);
     
-    // Validate structure
-    validateJSONStructure(data);
+    const validatedData = validateJSONStructure(data);
     
     const duration = Date.now() - startTime;
     logger.logPerformance('readData', duration, { 
-      users: data.users.length, 
-      posts: data.posts.length 
+      users: validatedData.users.length, 
+      posts: validatedData.posts.length 
     });
     
-    return data;
+    return validatedData;
     
   } catch (error) {
-    logger.logError('Error reading data file', error, { filePath: DATA_FILE_PATH });
+    logger.logError('Error reading data file', error as Error, { filePath: DATA_FILE_PATH });
     
-    // If file doesn't exist, create it with default structure
-    if (error.code === 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       logger.info('Data file not found, creating default structure');
-      const defaultData = {
+      const defaultData: DataStore = {
         users: [],
         posts: []
       };
@@ -47,78 +39,67 @@ const readData = async () => {
       return defaultData;
     }
     
-    throw new Error(`Failed to read data file: ${error.message}`);
+    throw new Error(`Failed to read data file: ${(error as Error).message}`);
   }
 };
 
-/**
- * Write data to JSON file
- */
-const writeData = async (data) => {
+export const writeData = async (data: DataStore): Promise<void> => {
   try {
     const startTime = Date.now();
     
-    // Validate data structure before writing
-    validateJSONStructure(data);
+    const validatedData = validateJSONStructure(data);
     
-    // Ensure directory exists
     const dir = path.dirname(DATA_FILE_PATH);
     await fs.mkdir(dir, { recursive: true });
     
-    // Create backup of current file
     try {
       await fs.access(DATA_FILE_PATH);
       const backupPath = `${DATA_FILE_PATH}.backup`;
       await fs.copyFile(DATA_FILE_PATH, backupPath);
     } catch (backupError) {
-      // File doesn't exist, no backup needed
       logger.debug('No existing file to backup');
     }
     
-    // Write data to file
-    const jsonContent = JSON.stringify(data, null, 2);
+    const jsonContent = JSON.stringify(validatedData, null, 2);
     await fs.writeFile(DATA_FILE_PATH, jsonContent, 'utf8');
     
     const duration = Date.now() - startTime;
     logger.logPerformance('writeData', duration, { 
-      users: data.users.length, 
-      posts: data.posts.length 
+      users: validatedData.users.length, 
+      posts: validatedData.posts.length 
     });
     
     logger.info('Data written successfully', { 
       filePath: DATA_FILE_PATH,
-      users: data.users.length,
-      posts: data.posts.length
+      users: validatedData.users.length,
+      posts: validatedData.posts.length
     });
     
   } catch (error) {
-    logger.logError('Error writing data file', error, { filePath: DATA_FILE_PATH });
+    logger.logError('Error writing data file', error as Error, { filePath: DATA_FILE_PATH });
     
-    // Try to restore from backup if write failed
     try {
       const backupPath = `${DATA_FILE_PATH}.backup`;
       await fs.access(backupPath);
       await fs.copyFile(backupPath, DATA_FILE_PATH);
       logger.info('Data restored from backup after write failure');
     } catch (restoreError) {
-      logger.error('Failed to restore from backup', restoreError);
+      logger.error('Failed to restore from backup', { 
+        error: restoreError instanceof Error ? restoreError.message : String(restoreError) 
+      });
     }
     
-    throw new Error(`Failed to write data file: ${error.message}`);
+    throw new Error(`Failed to write data file: ${(error as Error).message}`);
   }
 };
 
-/**
- * Generate a unique ID
- */
-const generateId = () => {
+
+export const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
-/**
- * Find user by ID
- */
-const findUserById = async (id) => {
+
+export const findUserById = async (id: string): Promise<User | null> => {
   try {
     const data = await readData();
     const user = data.users.find(user => user.id === id);
@@ -132,15 +113,13 @@ const findUserById = async (id) => {
     return user;
     
   } catch (error) {
-    logger.logError('Error finding user by ID', error, { userId: id });
+    logger.logError('Error finding user by ID', error as Error, { userId: id });
     throw error;
   }
 };
 
-/**
- * Find post by ID
- */
-const findPostById = async (id) => {
+
+export const findPostById = async (id: string): Promise<Post | null> => {
   try {
     const data = await readData();
     const post = data.posts.find(post => post.id === id);
@@ -154,45 +133,39 @@ const findPostById = async (id) => {
     return post;
     
   } catch (error) {
-    logger.logError('Error finding post by ID', error, { postId: id });
+    logger.logError('Error finding post by ID', error as Error, { postId: id });
     throw error;
   }
 };
 
-/**
- * Find all users
- */
-const findAllUsers = async () => {
+
+export const findAllUsers = async (): Promise<User[]> => {
   try {
     const data = await readData();
     logger.debug('Retrieved all users', { count: data.users.length });
     return data.users;
     
   } catch (error) {
-    logger.logError('Error finding all users', error);
+    logger.logError('Error finding all users', error as Error);
     throw error;
   }
 };
 
-/**
- * Find all posts
- */
-const findAllPosts = async () => {
+
+export const findAllPosts = async (): Promise<Post[]> => {
   try {
     const data = await readData();
     logger.debug('Retrieved all posts', { count: data.posts.length });
     return data.posts;
     
   } catch (error) {
-    logger.logError('Error finding all posts', error);
+    logger.logError('Error finding all posts', error as Error);
     throw error;
   }
 };
 
-/**
- * Find posts by author ID
- */
-const findPostsByAuthorId = async (authorId) => {
+
+export const findPostsByAuthorId = async (authorId: string): Promise<Post[]> => {
   try {
     const data = await readData();
     const posts = data.posts.filter(post => post.authorId === authorId);
@@ -201,15 +174,13 @@ const findPostsByAuthorId = async (authorId) => {
     return posts;
     
   } catch (error) {
-    logger.logError('Error finding posts by author ID', error, { authorId });
+    logger.logError('Error finding posts by author ID', error as Error, { authorId });
     throw error;
   }
 };
 
-/**
- * Find published posts
- */
-const findPublishedPosts = async () => {
+
+export const findPublishedPosts = async (): Promise<Post[]> => {
   try {
     const data = await readData();
     const publishedPosts = data.posts.filter(post => post.published === true);
@@ -218,15 +189,13 @@ const findPublishedPosts = async () => {
     return publishedPosts;
     
   } catch (error) {
-    logger.logError('Error finding published posts', error);
+    logger.logError('Error finding published posts', error as Error);
     throw error;
   }
 };
 
-/**
- * Search users by name or email
- */
-const searchUsers = async (searchTerm) => {
+
+export const searchUsers = async (searchTerm: string): Promise<User[]> => {
   try {
     const data = await readData();
     const normalizedSearch = searchTerm.toLowerCase();
@@ -244,15 +213,13 @@ const searchUsers = async (searchTerm) => {
     return matchingUsers;
     
   } catch (error) {
-    logger.logError('Error searching users', error, { searchTerm });
+    logger.logError('Error searching users', error as Error, { searchTerm });
     throw error;
   }
 };
 
-/**
- * Search posts by title or content
- */
-const searchPosts = async (searchTerm) => {
+
+export const searchPosts = async (searchTerm: string): Promise<Post[]> => {
   try {
     const data = await readData();
     const normalizedSearch = searchTerm.toLowerCase();
@@ -270,18 +237,16 @@ const searchPosts = async (searchTerm) => {
     return matchingPosts;
     
   } catch (error) {
-    logger.logError('Error searching posts', error, { searchTerm });
+    logger.logError('Error searching posts', error as Error, { searchTerm });
     throw error;
   }
 };
 
-/**
- * Get database statistics
- */
-const getStats = async () => {
+
+export const getStats = async (): Promise<Stats> => {
   try {
     const data = await readData();
-    const stats = {
+    const stats: Stats = {
       totalUsers: data.users.length,
       totalPosts: data.posts.length,
       publishedPosts: data.posts.filter(post => post.published).length,
@@ -294,20 +259,17 @@ const getStats = async () => {
     return stats;
     
   } catch (error) {
-    logger.logError('Error getting database statistics', error);
+    logger.logError('Error getting database statistics', error as Error);
     throw error;
   }
 };
 
-/**
- * Validate data integrity
- */
-const validateDataIntegrity = async () => {
+
+export const validateDataIntegrity = async (): Promise<IntegrityReport> => {
   try {
     const data = await readData();
-    const issues = [];
+    const issues: IntegrityReport['issues'] = [];
     
-    // Check for orphaned posts (posts without valid authors)
     const orphanedPosts = data.posts.filter(post => {
       const authorExists = data.users.some(user => user.id === post.authorId);
       return !authorExists;
@@ -317,11 +279,10 @@ const validateDataIntegrity = async () => {
       issues.push({
         type: 'ORPHANED_POSTS',
         count: orphanedPosts.length,
-        items: orphanedPosts.map(post => ({ id: post.id, title: post.title }))
+        items: orphanedPosts.map(post => `${post.id}: ${post.title}`)
       });
     }
     
-    // Check for users with invalid post references
     const usersWithInvalidPosts = data.users.filter(user => {
       if (!user.posts || user.posts.length === 0) return false;
       
@@ -337,11 +298,10 @@ const validateDataIntegrity = async () => {
       issues.push({
         type: 'INVALID_POST_REFERENCES',
         count: usersWithInvalidPosts.length,
-        items: usersWithInvalidPosts.map(user => ({ id: user.id, name: user.name }))
+        items: usersWithInvalidPosts.map(user => `${user.id}: ${user.name}`)
       });
     }
     
-    // Check for duplicate IDs
     const userIds = data.users.map(user => user.id);
     const duplicateUserIds = userIds.filter((id, index) => userIds.indexOf(id) !== index);
     
@@ -375,20 +335,16 @@ const validateDataIntegrity = async () => {
     };
     
   } catch (error) {
-    logger.logError('Error validating data integrity', error);
+    logger.logError('Error validating data integrity', error as Error);
     throw error;
   }
 };
 
-/**
- * Clean up orphaned data
- */
-const cleanupOrphanedData = async () => {
+export const cleanupOrphanedData = async (): Promise<CleanupResult> => {
   try {
     const data = await readData();
     let cleanupCount = 0;
     
-    // Remove orphaned posts
     const originalPostCount = data.posts.length;
     data.posts = data.posts.filter(post => {
       const authorExists = data.users.some(user => user.id === post.authorId);
@@ -399,7 +355,6 @@ const cleanupOrphanedData = async () => {
       return true;
     });
     
-    // Clean up invalid post references from users
     data.users.forEach(user => {
       if (user.posts && user.posts.length > 0) {
         const originalLength = user.posts.length;
@@ -418,7 +373,6 @@ const cleanupOrphanedData = async () => {
       }
     });
     
-    // Write cleaned data back to file
     if (cleanupCount > 0) {
       await writeData(data);
     }
@@ -434,15 +388,13 @@ const cleanupOrphanedData = async () => {
     };
     
   } catch (error) {
-    logger.logError('Error cleaning up orphaned data', error);
+    logger.logError('Error cleaning up orphaned data', error as Error);
     throw error;
   }
 };
 
-/**
- * Export data to backup
- */
-const exportData = async (backupPath) => {
+
+export const exportData = async (backupPath?: string): Promise<string> => {
   try {
     const data = await readData();
     const exportData = {
@@ -463,29 +415,23 @@ const exportData = async (backupPath) => {
     return backupFile;
     
   } catch (error) {
-    logger.logError('Error exporting data', error, { backupPath });
+    logger.logError('Error exporting data', error as Error, { backupPath });
     throw error;
   }
 };
 
-/**
- * Import data from backup
- */
-const importData = async (backupPath) => {
+export const importData = async (backupPath: string): Promise<DataStore> => {
   try {
     const backupContent = await fs.readFile(backupPath, 'utf8');
     const backupData = JSON.parse(backupContent);
     
-    // Validate structure
-    validateJSONStructure(backupData);
+    const validatedData = validateJSONStructure(backupData);
     
-    // Remove metadata fields if they exist
-    const importData = {
-      users: backupData.users,
-      posts: backupData.posts
+    const importData: DataStore = {
+      users: validatedData.users,
+      posts: validatedData.posts
     };
-    
-    // Write imported data
+
     await writeData(importData);
     
     logger.info('Data imported successfully', { 
@@ -497,35 +443,7 @@ const importData = async (backupPath) => {
     return importData;
     
   } catch (error) {
-    logger.logError('Error importing data', error, { backupPath });
+    logger.logError('Error importing data', error as Error, { backupPath });
     throw error;
   }
-};
-
-module.exports = {
-  // Core CRUD operations
-  readData,
-  writeData,
-  generateId,
-  
-  // Find operations
-  findUserById,
-  findPostById,
-  findAllUsers,
-  findAllPosts,
-  findPostsByAuthorId,
-  findPublishedPosts,
-  
-  // Search operations
-  searchUsers,
-  searchPosts,
-  
-  // Utility operations
-  getStats,
-  validateDataIntegrity,
-  cleanupOrphanedData,
-  
-  // Backup operations
-  exportData,
-  importData
 };

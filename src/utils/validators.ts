@@ -1,60 +1,84 @@
-const path = require('path');
-const fs = require('fs');
+import * as path from 'path';
+import * as fs from 'fs';
+import type { 
+  DataStore, 
+  CreateUserInput, 
+  UpdateUserInput, 
+  CreatePostInput, 
+  UpdatePostInput,
+  EnvironmentConfig,
+  ValidationResult,
+  ValidatorFunctions
+} from '../types';
 
-/**
- * Validate required environment variables
- */
-const validateEnvironment = () => {
-  const requiredEnvVars = [
-    'NODE_ENV',
-    'DATA_FILE_PATH'
-  ];
-  
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-  
-  if (missingVars.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+
+export const validateEnvironment = (): void => {
+
+  if (!process.env.NODE_ENV) {
+    process.env.NODE_ENV = 'development';
+    console.log('⚠️  NODE_ENV not set, defaulting to "development"');
   }
   
-  // Validate NODE_ENV values
-  const validEnvs = ['development', 'production', 'test'];
+  if (!process.env.DATA_FILE_PATH) {
+    process.env.DATA_FILE_PATH = './src/data/data.json';
+    console.log('⚠️  DATA_FILE_PATH not set, defaulting to "./src/data/data.json"');
+  }
+  
+  const validEnvs: readonly string[] = ['development', 'production', 'test'];
   if (!validEnvs.includes(process.env.NODE_ENV)) {
-    throw new Error(`Invalid NODE_ENV value: ${process.env.NODE_ENV}. Must be one of: ${validEnvs.join(', ')}`);
+    console.warn(`⚠️  Invalid NODE_ENV value: ${process.env.NODE_ENV}. Setting to "development"`);
+    process.env.NODE_ENV = 'development';
   }
   
-  // Validate DATA_FILE_PATH exists
+
   const dataFilePath = path.resolve(process.env.DATA_FILE_PATH);
-  if (!fs.existsSync(dataFilePath)) {
-    throw new Error(`Data file not found at: ${dataFilePath}`);
-  }
+  const dataDir = path.dirname(dataFilePath);
   
-  // Validate PORT if provided
-  if (process.env.PORT) {
-    const port = parseInt(process.env.PORT, 10);
-    if (isNaN(port) || port < 1 || port > 65535) {
-      throw new Error(`Invalid PORT value: ${process.env.PORT}. Must be a number between 1 and 65535`);
+  if (!fs.existsSync(dataDir)) {
+    try {
+      fs.mkdirSync(dataDir, { recursive: true });
+      console.log(`📁 Created data directory: ${dataDir}`);
+    } catch (error) {
+      console.warn(`⚠️  Could not create data directory: ${dataDir}`);
     }
   }
   
-  console.log('✅ Environment validation passed');
+  if (!fs.existsSync(dataFilePath)) {
+    try {
+
+      const defaultData = {
+        users: [],
+        posts: []
+      };
+      fs.writeFileSync(dataFilePath, JSON.stringify(defaultData, null, 2));
+      console.log(`📄 Created default data file: ${dataFilePath}`);
+    } catch (error) {
+      console.warn(`⚠️  Could not create data file: ${dataFilePath}`);
+    }
+  }
+  
+  if (process.env.PORT) {
+    const port = parseInt(process.env.PORT, 10);
+    if (isNaN(port) || port < 1 || port > 65535) {
+      console.warn(`⚠️  Invalid PORT value: ${process.env.PORT}. Will use default.`);
+      delete process.env.PORT; 
+    }
+  }
+  
+  console.log('✅ Environment validation completed');
 };
 
-/**
- * Validate GraphQL input data
- */
-const validateGraphQLInput = {
-  /**
-   * Validate user input
-   */
-  validateUserInput: (input) => {
-    const errors = [];
+
+export const validateGraphQLInput: ValidatorFunctions = {
+
+  validateUserInput: (input: any): string[] => {
+    const errors: string[] = [];
     
     if (!input) {
       errors.push('User input is required');
       return errors;
     }
     
-    // Validate name
     if (input.name !== undefined) {
       if (typeof input.name !== 'string' || input.name.trim().length === 0) {
         errors.push('Name must be a non-empty string');
@@ -63,7 +87,6 @@ const validateGraphQLInput = {
       }
     }
     
-    // Validate email
     if (input.email !== undefined) {
       if (typeof input.email !== 'string' || input.email.trim().length === 0) {
         errors.push('Email must be a non-empty string');
@@ -78,18 +101,15 @@ const validateGraphQLInput = {
     return errors;
   },
   
-  /**
-   * Validate post input
-   */
-  validatePostInput: (input) => {
-    const errors = [];
+
+  validatePostInput: (input: any): string[] => {
+    const errors: string[] = [];
     
     if (!input) {
       errors.push('Post input is required');
       return errors;
     }
     
-    // Validate title
     if (input.title !== undefined) {
       if (typeof input.title !== 'string' || input.title.trim().length === 0) {
         errors.push('Title must be a non-empty string');
@@ -98,7 +118,6 @@ const validateGraphQLInput = {
       }
     }
     
-    // Validate content
     if (input.content !== undefined) {
       if (typeof input.content !== 'string' || input.content.trim().length === 0) {
         errors.push('Content must be a non-empty string');
@@ -107,7 +126,6 @@ const validateGraphQLInput = {
       }
     }
     
-    // Validate authorId
     if (input.authorId !== undefined) {
       if (typeof input.authorId !== 'string' || input.authorId.trim().length === 0) {
         errors.push('Author ID must be a non-empty string');
@@ -117,10 +135,7 @@ const validateGraphQLInput = {
     return errors;
   },
   
-  /**
-   * Validate ID parameter
-   */
-  validateId: (id) => {
+  validateId: (id: any): string[] => {
     if (!id) {
       return ['ID is required'];
     }
@@ -133,95 +148,97 @@ const validateGraphQLInput = {
   }
 };
 
-/**
- * Sanitize user input to prevent XSS and other attacks
- */
-const sanitizeInput = (input) => {
+export const sanitizeInput = (input: unknown): string => {
   if (typeof input !== 'string') {
-    return input;
+    return String(input);
   }
   
   // Remove HTML tags and suspicious characters
   return input
     .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/[<>\"']/g, '') // Remove potentially dangerous characters
+    .replace(/[<>"']/g, '') // Remove potentially dangerous characters
     .trim();
 };
 
-/**
- * Validate and sanitize user input
- */
-const validateAndSanitizeUserInput = (input) => {
-  // First validate the structure
+export const validateAndSanitizeUserInput = (input: CreateUserInput | UpdateUserInput): CreateUserInput | UpdateUserInput => {
+
   const validationErrors = validateGraphQLInput.validateUserInput(input);
   if (validationErrors.length > 0) {
     throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
   }
   
-  // Then sanitize the input
   const sanitized = { ...input };
-  if (sanitized.name) {
+  if ('name' in sanitized && sanitized.name) {
     sanitized.name = sanitizeInput(sanitized.name);
   }
-  if (sanitized.email) {
+  if ('email' in sanitized && sanitized.email) {
     sanitized.email = sanitizeInput(sanitized.email);
   }
   
   return sanitized;
 };
 
-/**
- * Validate and sanitize post input
- */
-const validateAndSanitizePostInput = (input) => {
-  // First validate the structure
+export const validateAndSanitizePostInput = (input: CreatePostInput | UpdatePostInput): CreatePostInput | UpdatePostInput => {
+
   const validationErrors = validateGraphQLInput.validatePostInput(input);
   if (validationErrors.length > 0) {
     throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
   }
   
-  // Then sanitize the input
   const sanitized = { ...input };
-  if (sanitized.title) {
+  if ('title' in sanitized && sanitized.title) {
     sanitized.title = sanitizeInput(sanitized.title);
   }
-  if (sanitized.content) {
+  if ('content' in sanitized && sanitized.content) {
     sanitized.content = sanitizeInput(sanitized.content);
   }
-  if (sanitized.authorId) {
+  if ('authorId' in sanitized && sanitized.authorId) {
     sanitized.authorId = sanitizeInput(sanitized.authorId);
   }
   
   return sanitized;
 };
 
-/**
- * Rate limiting validation
- */
-const validateRateLimit = (req, maxRequests = 100, windowMs = 60000) => {
-  // Simple in-memory rate limiting (for production, use Redis or similar)
+
+interface RateLimitResult {
+  remaining: number;
+  resetTime: Date;
+}
+
+interface RateLimitRequest {
+  ip?: string;
+}
+
+declare global {
+  var rateLimitStore: Map<string, number[]> | undefined;
+}
+
+export const validateRateLimit = (
+  req: RateLimitRequest, 
+  maxRequests: number = 100, 
+  windowMs: number = 60000
+): RateLimitResult => {
+
   const clientId = req.ip || 'unknown';
   const now = Date.now();
   
-  // Initialize rate limit store if it doesn't exist
-  if (!global.rateLimitStore) {
-    global.rateLimitStore = new Map();
+
+  if (!globalThis.rateLimitStore) {
+    globalThis.rateLimitStore = new Map<string, number[]>();
   }
   
-  const clientRequests = global.rateLimitStore.get(clientId) || [];
+  const store = globalThis.rateLimitStore;
+  const clientRequests = store.get(clientId) || [];
   
-  // Remove old requests outside the window
   const recentRequests = clientRequests.filter(timestamp => now - timestamp < windowMs);
   
-  // Check if limit exceeded
   if (recentRequests.length >= maxRequests) {
-    const resetTime = new Date(recentRequests[0] + windowMs);
+    const resetTime = new Date(recentRequests[0]! + windowMs);
     throw new Error(`Rate limit exceeded. Try again after ${resetTime.toISOString()}`);
   }
   
-  // Add current request
   recentRequests.push(now);
-  global.rateLimitStore.set(clientId, recentRequests);
+  store.set(clientId, recentRequests);
   
   return {
     remaining: maxRequests - recentRequests.length,
@@ -229,10 +246,7 @@ const validateRateLimit = (req, maxRequests = 100, windowMs = 60000) => {
   };
 };
 
-/**
- * Validate JSON structure
- */
-const validateJSONStructure = (data) => {
+function validateJSONStructure(data: any): DataStore {
   if (!data || typeof data !== 'object') {
     throw new Error('Invalid JSON structure: must be an object');
   }
@@ -245,8 +259,7 @@ const validateJSONStructure = (data) => {
     throw new Error('Invalid JSON structure: posts must be an array');
   }
   
-  // Validate user objects
-  data.users.forEach((user, index) => {
+  data.users.forEach((user: any, index: number) => {
     if (!user.id || typeof user.id !== 'string') {
       throw new Error(`Invalid user at index ${index}: id must be a non-empty string`);
     }
@@ -256,10 +269,12 @@ const validateJSONStructure = (data) => {
     if (!user.email || typeof user.email !== 'string') {
       throw new Error(`Invalid user at index ${index}: email must be a non-empty string`);
     }
+    if (!Array.isArray(user.posts)) {
+      throw new Error(`Invalid user at index ${index}: posts must be an array`);
+    }
   });
   
-  // Validate post objects
-  data.posts.forEach((post, index) => {
+  data.posts.forEach((post: any, index: number) => {
     if (!post.id || typeof post.id !== 'string') {
       throw new Error(`Invalid post at index ${index}: id must be a non-empty string`);
     }
@@ -272,17 +287,42 @@ const validateJSONStructure = (data) => {
     if (!post.authorId || typeof post.authorId !== 'string') {
       throw new Error(`Invalid post at index ${index}: authorId must be a non-empty string`);
     }
+    if (typeof post.published !== 'boolean') {
+      throw new Error(`Invalid post at index ${index}: published must be a boolean`);
+    }
   });
   
-  return true;
+  return data as DataStore;
+}
+
+export { validateJSONStructure };
+
+export const validateWithDetails = <T>(
+  data: T, 
+  validator: (data: T) => string[]
+): ValidationResult => {
+  const errors = validator(data);
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 };
 
-module.exports = {
-  validateEnvironment,
-  validateGraphQLInput,
-  sanitizeInput,
-  validateAndSanitizeUserInput,
-  validateAndSanitizePostInput,
-  validateRateLimit,
-  validateJSONStructure
+export const isCreateUserInput = (input: any): input is CreateUserInput => {
+  return (
+    typeof input === 'object' &&
+    input !== null &&
+    typeof input.name === 'string' &&
+    typeof input.email === 'string'
+  );
+};
+
+export const isCreatePostInput = (input: any): input is CreatePostInput => {
+  return (
+    typeof input === 'object' &&
+    input !== null &&
+    typeof input.title === 'string' &&
+    typeof input.content === 'string' &&
+    typeof input.authorId === 'string'
+  );
 };

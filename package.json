@@ -4,19 +4,19 @@
   "description": "A GraphQL API built with Node.js, Express, and GraphQL Yoga",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false",
-    "lint": "echo 'Linting skipped'",
-    "lint:fix": "echo 'Linting skipped'",
-    "format": "echo 'Formatting skipped'",
-    "format:check": "echo 'Format check skipped'",
-    "build": "echo 'No build step required'",
-    "clean": "rm -rf coverage/ logs/ node_modules/.cache",
-    "precommit": "npm run test:ci"
+    "build": "tsc",
+    "start": "NODE_ENV=production node dist/server.js",
+    "dev": "NODE_ENV=development ts-node src/server.ts",
+    "dev:watch": "NODE_ENV=development ts-node --watch src/server.ts",
+    "test": "NODE_ENV=test jest",
+    "test:watch": "NODE_ENV=test jest --watch",
+    "test:coverage": "NODE_ENV=test jest --coverage",
+    "test:ci": "NODE_ENV=test jest --ci --coverage --watchAll=false",
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "eslint src/ --ext .ts --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist coverage",
+    "prestart": "npm run build"
   },
   "keywords": [
     "graphql",
@@ -40,7 +40,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "graphql": "^16.8.1",
-    "graphql-yoga": "^5.0.0",
+    "graphql-yoga": "^3.9.0",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
@@ -48,7 +48,14 @@
     "nodemon": "^3.0.1",
     "eslint": "^8.57.0",
     "supertest": "^6.3.3",
-    "@types/jest": "^29.5.5"
+    "@types/jest": "^29.5.5",
+    "typescript": "^5.2.2",
+    "@types/node": "^20.8.0",
+    "ts-node": "^10.9.1",
+    "ts-jest": "^29.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "tsconfig-paths": "^4.2.0"
   },
   "engines": {
     "node": ">=16.0.0",

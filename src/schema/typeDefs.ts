@@ -1,4 +1,4 @@
-const typeDefs = `
+const typeDefs = /* GraphQL */ `
   # Scalar types
   scalar DateTime
 
@@ -39,7 +39,7 @@ const typeDefs = `
     title: String!
     content: String!
     authorId: String!
-    published: Boolean
+    published: Boolean = false
   }
 
   input UpdatePostInput {
@@ -52,8 +52,8 @@ const typeDefs = `
   # Search input type
   input SearchInput {
     term: String!
-    limit: Int
-    offset: Int
+    limit: Int = 10
+    offset: Int = 0
   }
 
   # Response types for operations
@@ -89,6 +89,9 @@ const typeDefs = `
 
   # Query type definition
   type Query {
+    # Health and info
+    hello: String!
+    
     # User queries
     users: [User!]!
     user(id: ID!): User
@@ -104,9 +107,6 @@ const typeDefs = `
     # Utility queries
     stats: Stats!
     validateIntegrity: IntegrityReport!
-    
-    # Health check
-    health: String!
   }
 
   # Mutation type definition
@@ -134,4 +134,4 @@ const typeDefs = `
   }
 `;
 
-module.exports = typeDefs;
+export default typeDefs;

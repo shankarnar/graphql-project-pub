@@ -1,0 +1,16 @@
+[2025-07-15T09:37:22.404Z] INFO:  Server is running on http://localhost:4000
+[2025-07-15T09:37:22.419Z] INFO:  GraphQL endpoint available at http://localhost:4000/graphql
+[2025-07-15T09:37:22.449Z] INFO:  Health check available at http://localhost:4000/health
+[2025-07-15T09:37:22.473Z] INFO: 🎮 GraphQL Playground available at http://localhost:4000/graphql
+[2025-07-15T09:37:22.493Z] INFO: Environment: development
+[2025-07-15T09:37:22.514Z] INFO: Data file path: ./src/data/data.json
+[2025-07-15T09:38:19.349Z] INFO: GET / - ::1
+[2025-07-15T09:38:24.614Z] INFO: POST /graphql - ::1
+[2025-07-15T09:38:24.697Z] INFO: Creating new user {"input":{"name":"Alice Johnson","email":"***"}}
+[2025-07-15T09:38:24.719Z] INFO: Performance: readData took 9ms {"operation":"readData","duration":9,"slow":false,"users":6,"posts":3}
+[2025-07-15T09:38:26.923Z] INFO: POST /graphql - ::1
+[2025-07-15T09:38:27.004Z] INFO: Fetching all users
+[2025-07-15T09:38:27.044Z] INFO: Performance: readData took 11ms {"operation":"readData","duration":11,"slow":false,"users":6,"posts":3}
+[2025-07-15T09:38:27.088Z] INFO: Users fetched successfully {"count":6}
+[2025-07-15T09:38:31.897Z] INFO: Received SIGINT. Starting graceful shutdown...
+[2025-07-15T09:38:31.912Z] INFO: Server closed successfully
