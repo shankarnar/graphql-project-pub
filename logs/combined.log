@@ -1,0 +1,24 @@
+[2025-07-15T09:37:22.404Z] INFO:  Server is running on http://localhost:4000
+[2025-07-15T09:37:22.419Z] INFO:  GraphQL endpoint available at http://localhost:4000/graphql
+[2025-07-15T09:37:22.449Z] INFO:  Health check available at http://localhost:4000/health
+[2025-07-15T09:37:22.473Z] INFO: 🎮 GraphQL Playground available at http://localhost:4000/graphql
+[2025-07-15T09:37:22.493Z] INFO: Environment: development
+[2025-07-15T09:37:22.514Z] INFO: Data file path: ./src/data/data.json
+[2025-07-15T09:38:19.349Z] INFO: GET / - ::1
+[2025-07-15T09:38:24.614Z] INFO: POST /graphql - ::1
+[2025-07-15T09:38:24.628Z] DEBUG: GraphQL Debug {"args":["Parsing request to extract GraphQL parameters"]}
+[2025-07-15T09:38:24.665Z] DEBUG: GraphQL Debug {"args":["Processing GraphQL Parameters"]}
+[2025-07-15T09:38:24.697Z] INFO: Creating new user {"input":{"name":"Alice Johnson","email":"***"}}
+[2025-07-15T09:38:24.719Z] INFO: Performance: readData took 9ms {"operation":"readData","duration":9,"slow":false,"users":6,"posts":3}
+[2025-07-15T09:38:24.770Z] ERROR: Error creating user {"error":{"message":"A user with this email already exists","stack":"GraphQLError: A user with this email already exists\n    at Object.createUser (/mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/src/resolvers/mutationResolvers.ts:57:15)\n    at async /mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/node_modules/@envelop/core/cjs/orchestrator.js:376:27\n    at async YogaServer.getResultForParams (/mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/node_modules/graphql-yoga/cjs/server.js:331:26)\n    at async YogaServer.handle (/mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/node_modules/graphql-yoga/cjs/server.js:78:29)\n    at async handlerWithErrorHandling (/mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/node_modules/@whatwg-node/server/cjs/plugins/useErrorHandling.js:33:38)\n    at async handleRequest (/mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/node_modules/@whatwg-node/server/cjs/createServerAdapter.js:73:24)\n    at async requestListener (/mnt/c/Users/ShankarNarasimhan/OneDrive - IBM/Shankar_OneDrive/Shankar-01056E/07 IBM 2025/IBM Bench June 06/02 Interviews/BP Pulse/Working_Code_testing-readme/graphql-project-pub-Typescript/graphql-project-pub/node_modules/@whatwg-node/server/cjs/createServerAdapter.js:100:26)","name":"GraphQLError"},"input":{"name":"Alice Johnson","email":"alice@example.com"}}
+[2025-07-15T09:38:24.779Z] DEBUG: GraphQL Debug {"args":["Processing GraphQL Parameters done."]}
+[2025-07-15T09:38:26.923Z] INFO: POST /graphql - ::1
+[2025-07-15T09:38:26.935Z] DEBUG: GraphQL Debug {"args":["Parsing request to extract GraphQL parameters"]}
+[2025-07-15T09:38:26.969Z] DEBUG: GraphQL Debug {"args":["Processing GraphQL Parameters"]}
+[2025-07-15T09:38:27.004Z] INFO: Fetching all users
+[2025-07-15T09:38:27.044Z] INFO: Performance: readData took 11ms {"operation":"readData","duration":11,"slow":false,"users":6,"posts":3}
+[2025-07-15T09:38:27.056Z] DEBUG: Retrieved all users {"count":6}
+[2025-07-15T09:38:27.088Z] INFO: Users fetched successfully {"count":6}
+[2025-07-15T09:38:27.126Z] DEBUG: GraphQL Debug {"args":["Processing GraphQL Parameters done."]}
+[2025-07-15T09:38:31.897Z] INFO: Received SIGINT. Starting graceful shutdown...
+[2025-07-15T09:38:31.912Z] INFO: Server closed successfully

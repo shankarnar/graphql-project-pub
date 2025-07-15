@@ -95,3 +95,5 @@ mutation {
     email
   }
 }
+
+## Note: In case npm run dev does not work, run node scripts/start.js and then run npm run dev.
